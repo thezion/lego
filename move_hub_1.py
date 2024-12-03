@@ -89,10 +89,10 @@ def main():
             # go forward
             if Button.LEFT_PLUS in pressed:
                 if estimated_distance > danger_distance:
-                    # hitting a wall?
                     motor_a.dc(power-5)  # somehow motor a is stronger
                     motor_b.dc(-power)
                 else:
+                    # hitting a wall?
                     motor_a.stop()
                     motor_b.stop()
                     remote.light.on(Color.RED)
