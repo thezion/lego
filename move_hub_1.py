@@ -11,7 +11,7 @@ from pybricks.parameters import Button, Color, Port
 from pybricks.tools import wait
 from pybricks.pupdevices import Remote
 
-# ====== ====== ====== ====== ======
+# ====== ====== ====== ====== ====== ====== ====== ======
 
 hub = MoveHub()
 hub_battery = hub.battery.current()  # pylint: disable=E1111
@@ -23,7 +23,7 @@ remote: Remote = None
 remote_tries: int = 5
 remote_connected: bool = False
 
-# ====== ====== ====== ====== ======
+# ====== ====== ====== ====== ====== ====== ====== ======
 
 
 def update_speed(original_power: int) -> int:
@@ -55,35 +55,44 @@ def main():
     """
     What to do after the devices are ready.
     """
-    power: int = 60
+    power: int = 60  # initial wheel power
+    turn_power: int = 80  # fixed turn power
 
     while True:
         pressed = remote.buttons.pressed()  # pylint: disable=E1111
         hub_press = hub.buttons.pressed()  # pylint: disable=E1111
 
-        # ====== remote ======
-
-        if Button.LEFT_PLUS in pressed:
-            motor_b.dc(-power)
-        elif Button.LEFT_MINUS in pressed:
-            motor_b.dc(power)
-        else:
-            motor_b.stop()
+        # ====== move ======
 
         if Button.RIGHT_PLUS in pressed:
-            motor_a.dc(power)
+            # turn right
+            motor_a.dc(-turn_power)
+            motor_b.dc(-turn_power)
         elif Button.RIGHT_MINUS in pressed:
-            motor_a.dc(-power)
+            # turn left
+            motor_a.dc(turn_power)
+            motor_b.dc(turn_power)
         else:
-            motor_a.stop()
+            # go forward
+            if Button.LEFT_PLUS in pressed:
+                motor_a.dc(power-5)  # somehow motor a is stronger
+                motor_b.dc(-power)
+            # go backward
+            elif Button.LEFT_MINUS in pressed:
+                motor_a.dc(-(power-1))
+                motor_b.dc(power)
+            else:
+                motor_a.stop()
+                motor_b.stop()
 
         if Button.LEFT in pressed:
             power = update_speed(power)
 
-        # ====== remote ======
+        # ====== utils ======
 
         if Button.CENTER in hub_press:
             print("Bye bye!")
+            wait(500)
             hub.system.shutdown()
             break
 
@@ -91,7 +100,7 @@ def main():
         wait(100)
 
 
-# ====== ====== ====== ====== ======
+# ====== ====== ====== ====== ====== ====== ====== ======
 
 
 for _ in range(5):
@@ -99,6 +108,7 @@ for _ in range(5):
 print("Running app...")
 print(f"Current battery: {hub_battery}%")
 
+# blink white light to indicate the app is searching for remote
 hub.light.blink(Color.WHITE, [200, 100, 200, 1000])
 
 while remote_tries > 0:
@@ -110,13 +120,13 @@ while remote_tries > 0:
         remote_connected = True
         break
     except Exception as e:
-        print(f"Fail to connect to remote! {e}")
+        print(f"Timeout connecting to remote! {e}")
 
 if remote_connected:
     print("Remote connected!")
     hub.light.on(Color.YELLOW if hub_battery < 20 else Color.GREEN)
     remote.light.on(Color.GREEN)
-    main()
+    main()  # run major logic
 else:
     hub.light.on(Color.RED)
     wait(3000)
