@@ -3,10 +3,9 @@
 ###
 
 from pybricks.hubs import MoveHub
-from pybricks.pupdevices import Motor, ColorDistanceSensor
-from pybricks.parameters import Button, Color, Direction, Port, Side, Stop
-from pybricks.robotics import DriveBase
-from pybricks.tools import wait, StopWatch
+from pybricks.pupdevices import Motor
+from pybricks.parameters import Button, Color, Port
+from pybricks.tools import wait
 from pybricks.pupdevices import Remote
 
 # ====== ====== ====== ====== ======
@@ -18,14 +17,23 @@ motor_a = Motor(Port.A)
 motor_b = Motor(Port.B)
 
 remote: Remote = None
-remote_tries = 5
-remote_connected = False
+remote_tries: int = 5
+remote_connected: bool = False
 
 # ====== ====== ====== ====== ======
 
 
-def update_speed(power):
-    new_power = power + 20
+def update_speed(original_power: int) -> int:
+    """
+    Update motor power and blink the light
+
+    Args:
+        original_power (int): The original power of the motor.
+
+    Returns:
+        int: The new power of the motor.
+    """
+    new_power = original_power + 20
     if new_power > 100:
         new_power = 40
     print(f"Motor power = {new_power}")
@@ -42,7 +50,7 @@ def update_speed(power):
 # ====== ====== ====== ====== ======
 
 
-for _ in range(10):
+for _ in range(5):
     print()
 print("Running app...")
 print(f"Current battery: {hub_battery}%")
@@ -57,8 +65,8 @@ while remote_tries > 0:
         remote = Remote()
         remote_connected = True
         break
-    except:
-        print("Fail to connect to remote!")
+    except Exception as e:
+        print(f"Fail to connect to remote! {e}")
 
 if remote_connected:
     print("Remote connected!")
