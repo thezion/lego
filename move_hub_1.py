@@ -21,8 +21,6 @@ hub_battery = hub.battery.current()
 motor_a = Motor(Port.A)
 motor_b = Motor(Port.B)
 
-distance = ColorDistanceSensor(Port.D)
-
 remote: Remote = None
 remote_tries: int = 5
 remote_connected: bool = False
@@ -59,10 +57,18 @@ def main():
     """
     What to do after the devices are ready.
     """
+
+    distance: ColorDistanceSensor = None
+
+    try:
+        distance = ColorDistanceSensor(Port.D)
+    except Exception as e:
+        print(f"Distance sensor not connected! {e}")
+
     power: int = 60  # initial wheel power
     turn_power: int = 80  # fixed turn power
-    loops: int = 0
-    estimated_distance: int = 100
+    loops: int = 0  # how many loops have been run
+    estimated_distance: int = 100  # if distance sensor is equipped, it will be updated
     danger_distance: int = 50
 
     while True:
@@ -71,9 +77,9 @@ def main():
 
         # ====== distance ======
 
-        if loops % 5 == 0:
+        if distance and loops % 5 == 0:
             estimated_distance = distance.distance()
-            # print(f"Estimated distance: {estimated_distance}")
+            print(f"Estimated distance: {estimated_distance}")
 
         # ====== move ======
 
