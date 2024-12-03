@@ -1,3 +1,5 @@
+# pylint: disable=assignment-from-no-return
+
 """
 Download to the Move Hub and run the app:
 ======================================================
@@ -6,7 +8,7 @@ pybricksdev run ble --name "PB Move Hub" move_hub_1.py
 """
 
 from pybricks.hubs import MoveHub
-from pybricks.pupdevices import Motor
+from pybricks.pupdevices import Motor, ColorDistanceSensor
 from pybricks.parameters import Button, Color, Port
 from pybricks.tools import wait
 from pybricks.pupdevices import Remote
@@ -14,10 +16,12 @@ from pybricks.pupdevices import Remote
 # ====== ====== ====== ====== ====== ====== ====== ======
 
 hub = MoveHub()
-hub_battery = hub.battery.current()  # pylint: disable=E1111
+hub_battery = hub.battery.current()
 
 motor_a = Motor(Port.A)
 motor_b = Motor(Port.B)
+
+distance = ColorDistanceSensor(Port.D)
 
 remote: Remote = None
 remote_tries: int = 5
@@ -57,10 +61,19 @@ def main():
     """
     power: int = 60  # initial wheel power
     turn_power: int = 80  # fixed turn power
+    loops: int = 0
+    estimated_distance: int = 100
+    danger_distance: int = 50
 
     while True:
-        pressed = remote.buttons.pressed()  # pylint: disable=E1111
-        hub_press = hub.buttons.pressed()  # pylint: disable=E1111
+        pressed = remote.buttons.pressed()
+        hub_press = hub.buttons.pressed()
+
+        # ====== distance ======
+
+        if loops % 5 == 0:
+            estimated_distance = distance.distance()
+            # print(f"Estimated distance: {estimated_distance}")
 
         # ====== move ======
 
@@ -75,8 +88,16 @@ def main():
         else:
             # go forward
             if Button.LEFT_PLUS in pressed:
-                motor_a.dc(power-5)  # somehow motor a is stronger
-                motor_b.dc(-power)
+                if estimated_distance > danger_distance:
+                    # hitting a wall?
+                    motor_a.dc(power-5)  # somehow motor a is stronger
+                    motor_b.dc(-power)
+                else:
+                    motor_a.stop()
+                    motor_b.stop()
+                    remote.light.on(Color.RED)
+                    wait(100)
+                    remote.light.on(Color.GREEN)
             # go backward
             elif Button.LEFT_MINUS in pressed:
                 motor_a.dc(-(power-1))
@@ -98,6 +119,7 @@ def main():
 
         # ====== next tick ======
         wait(100)
+        loops += 1
 
 
 # ====== ====== ====== ====== ====== ====== ====== ======
