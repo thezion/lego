@@ -1,6 +1,9 @@
-###
-# pybricksdev run ble --name "PB Move Hub" move_hub_1.py
-###
+"""
+Download to the Move Hub and run the app:
+======================================================
+pybricksdev run ble --name "PB Move Hub" move_hub_1.py
+======================================================
+"""
 
 from pybricks.hubs import MoveHub
 from pybricks.pupdevices import Motor
@@ -11,7 +14,7 @@ from pybricks.pupdevices import Remote
 # ====== ====== ====== ====== ======
 
 hub = MoveHub()
-hub_battery = hub.battery.current()
+hub_battery = hub.battery.current()  # pylint: disable=E1111
 
 motor_a = Motor(Port.A)
 motor_b = Motor(Port.B)
@@ -40,43 +43,23 @@ def update_speed(original_power: int) -> int:
     blinks = new_power // 20
     while blinks > 0:
         wait(100)
-        remote.light.on(Color.RED)
+        remote.light.on(Color.VIOLET)
         wait(100)
         remote.light.off()
         blinks -= 1
     remote.light.on(Color.GREEN)
     return new_power
 
-# ====== ====== ====== ====== ======
 
-
-for _ in range(5):
-    print()
-print("Running app...")
-print(f"Current battery: {hub_battery}%")
-
-hub.light.blink(Color.WHITE, [200, 100, 200, 1000])
-
-while remote_tries > 0:
-    wait(1000)
-    remote_tries -= 1
-    print(f"Connecting to remote ... {5-remote_tries} / 5")
-    try:
-        remote = Remote()
-        remote_connected = True
-        break
-    except Exception as e:
-        print(f"Fail to connect to remote! {e}")
-
-if remote_connected:
-    print("Remote connected!")
-    hub.light.on(Color.YELLOW if hub_battery < 20 else Color.GREEN)
-    remote.light.on(Color.GREEN)
-    power = 60
+def main():
+    """
+    What to do after the devices are ready.
+    """
+    power: int = 60
 
     while True:
-        pressed = remote.buttons.pressed()
-        hub_press = hub.buttons.pressed()
+        pressed = remote.buttons.pressed()  # pylint: disable=E1111
+        hub_press = hub.buttons.pressed()  # pylint: disable=E1111
 
         # ====== remote ======
 
@@ -106,6 +89,34 @@ if remote_connected:
 
         # ====== next tick ======
         wait(100)
+
+
+# ====== ====== ====== ====== ======
+
+
+for _ in range(5):
+    print()
+print("Running app...")
+print(f"Current battery: {hub_battery}%")
+
+hub.light.blink(Color.WHITE, [200, 100, 200, 1000])
+
+while remote_tries > 0:
+    wait(1000)
+    remote_tries -= 1
+    print(f"Connecting to remote ... {5-remote_tries} / 5")
+    try:
+        remote = Remote()
+        remote_connected = True
+        break
+    except Exception as e:
+        print(f"Fail to connect to remote! {e}")
+
+if remote_connected:
+    print("Remote connected!")
+    hub.light.on(Color.YELLOW if hub_battery < 20 else Color.GREEN)
+    remote.light.on(Color.GREEN)
+    main()
 else:
     hub.light.on(Color.RED)
     wait(3000)
